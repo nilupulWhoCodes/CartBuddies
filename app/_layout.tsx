@@ -1,20 +1,35 @@
+import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Slot, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { PaperProvider } from 'react-native-paper';
+import { CombinedDarkTheme, CombinedLightTheme } from '@/themes';
+import Inter from '../assets/fonts/Inter.ttf';
+import InterBold from '@assets/fonts/InterBold.ttf';
+import InterMedium from '@assets/fonts/InterMedium.ttf';
+import InterSemiBold from '@assets/fonts/InterSemiBold.ttf';
+import PoppinsBold from '@assets/fonts/Poppins-Bold.ttf';
+import PoppinsMedium from '@assets/fonts/Poppins-Medium.ttf';
+import PoppinsRegular from '@assets/fonts/Poppins-Regular.ttf';
+import PoppinsSemiBold from '@assets/fonts/Poppins-SemiBold.ttf';
+import { useColorScheme } from 'react-native';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '@/hooks/useLocalization';
+import { SessionProvider } from '@/contexts/authContext';
+import InAppNotification from '@/components/InappNotification/InappNotification';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
-import { useColorScheme } from '@/components/useColorScheme';
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
@@ -23,7 +38,14 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    'poppins-regular': PoppinsRegular,
+    'poppins-bold': PoppinsBold,
+    inter: Inter,
+    'inter-medium': InterMedium,
+    'poppins-semibold': PoppinsSemiBold,
+    'inter-bold': InterBold,
+    'inter-semibold': InterSemiBold,
+    'poppins-medium': PoppinsMedium,
     ...FontAwesome.font,
   });
 
@@ -48,12 +70,19 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
+  const paperTheme =
+    colorScheme === 'light' ? CombinedLightTheme : CombinedDarkTheme;
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <SessionProvider>
+      <NotificationProvider>
+        <I18nextProvider i18n={i18n}>
+          <PaperProvider theme={paperTheme}>
+            <Slot initialRouteName="(public)" />
+            <InAppNotification />
+          </PaperProvider>
+        </I18nextProvider>
+      </NotificationProvider>
+    </SessionProvider>
   );
 }
